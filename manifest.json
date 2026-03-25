@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Data Fake Brasil - ALN",
+  "version": "1.0",
+  "description": "Preenche formulários com dados brasileiros",
+  "permissions": ["activeTab", "scripting"],
+  "web_accessible_resources": [
+    {
+      "resources": ["faker.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "run_at": "document_start",
+      "js": ["inject.js"]
+    },
+    {
+      "matches": ["<all_urls>"],
+      "run_at": "document_end",
+      "js": [
+        "generators/person.js",
+        "generators/cpf.js",
+        "generators/cnpj.js",
+        "generators/company.js",
+        "generators/phone.js",
+        "generators/email.js",
+        "generators/cep.js",
+        "utils/addressService.js",
+        "utils/fieldDetector.js",
+        "content.js"
+      ]
+    }
+  ]
+}
