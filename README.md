@@ -11,6 +11,8 @@ Ideal para testes manuais de cadastro, QA e validação visual de formulários s
 O projeto foi criado para agilizar o trabalho de desenvolvimento e testes, preenchendo campos comuns de formulários web com dados fake como:
 
 - Nome e sobrenome
+- Nome da Mae
+- Texto (100 caracteres em portugues)
 - E-mail
 - CPF e CNPJ
 - Telefone
@@ -41,8 +43,18 @@ A extensão identifica os campos por atributos como `name`, `id`, `placeholder`,
 - Preenchimento inteligente por detecção textual de campos (PT-BR e alguns termos em inglês)
 - Suporte a campos nativos e alguns componentes customizados
 - Marcação automática de `checkbox`/`radio` quando aplicável
+- Menu de contexto (botão direito) para mapear manualmente qual variável preencher em cada campo
 - Geração local de documentos e dados fake
 - Integração com ViaCEP para enriquecer dados de endereço
+
+### Mapeamento manual por campo (novo)
+
+1. Clique com o botão direito em um campo editável.
+2. Abra o menu **Data Fake BR - preencher com...**.
+3. Escolha a variável desejada (ex.: Texto, CPF, E-mail, Nome da Mae, Empresa, CEP Goiania, CEP Curitiba).
+
+A extensão preenche imediatamente o campo selecionado e salva o mapeamento por host (site).
+Nos próximos cliques em **Preencher formulário**, esse mapeamento tem prioridade sobre a detecção automática.
 
 ---
 
@@ -106,11 +118,13 @@ A extensão utiliza:
 
 - `activeTab`: para interagir com a aba ativa
 - `scripting`: para executar lógica de preenchimento
+- `contextMenus`: para exibir opções no clique com botão direito em campos editáveis
+- `storage`: para salvar mapeamentos manuais por campo/host
 
 Além disso, faz requisição HTTP para a API pública do **ViaCEP** ao buscar endereço por CEP gerado.
 
 - Não há backend próprio neste projeto.
-- Não há armazenamento persistente configurado no código atual.
+- O armazenamento local do navegador e usado para persistir mapeamentos manuais de campos.
 
 ---
 

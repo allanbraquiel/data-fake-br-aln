@@ -23,10 +23,30 @@ const sobrenomes = [
   "Mendes","Assis","Duarte"
 ];
 
+const nomesFemininos = [
+  "Maria", "Ana", "Mariana", "Fernanda", "Juliana",
+  "Camila", "Larissa", "Amanda", "Sofia", "Isabela",
+  "Gabriela", "Carolina", "Beatriz", "Priscila", "Alice",
+  "Vanessa", "Patricia", "Bruna", "Sabrina", "Daniela",
+  "Aline", "Renata", "Cláudia", "Luciana", "Mônica",
+  "Carla", "Flávia", "Tatiana", "Cíntia", "Márcia",
+  "Simone", "Eliane", "Rosana", "Adriana", "Sílvia",
+  "Cristina", "Débora", "Elenice", "Fátima", "Gisele",
+  "Heloísa", "Inês", "Jéssica", "Kátia", "Lívia"
+];
+
 function gerarNome() {
 
   let nome = nomes[Math.floor(Math.random()*nomes.length)];
   let sobrenome = sobrenomes[Math.floor(Math.random()*sobrenomes.length)];
+  let sobrenome2 = sobrenomes[Math.floor(Math.random()*sobrenomes.length)];
 
-  return nome + " " + sobrenome;
+  return nome + " " + sobrenome + " " + sobrenome2;
+}
+
+function gerarNomeMae() {
+  const primeiroNome = nomesFemininos[Math.floor(Math.random() * nomesFemininos.length)];
+  const sobrenome = sobrenomes[Math.floor(Math.random() * sobrenomes.length)];
+  const sobrenome2 = sobrenomes[Math.floor(Math.random() * sobrenomes.length)];
+  return `${primeiroNome} ${sobrenome} ${sobrenome2}`;
 }

@@ -30,10 +30,58 @@ function setarValor(campo, valor) {
   dispararEventos(campo);
 }
 
+const STORAGE_FIELD_MAPPINGS_KEY = "fieldMappingsByHost";
+const TIPOS_MENU_SUPORTADOS = new Set([
+  "texto",
+  "nome",
+  "firstName",
+  "lastName",
+  "nomeMae",
+  "email",
+  "cpf",
+  "cnpj",
+  "telefone",
+  "empresa",
+  "senha",
+  "dataNascimento",
+  "cep",
+  "cepGoiania",
+  "cepCuritiba",
+  "logradouro",
+  "numero",
+  "complemento",
+  "bairro",
+  "cidade",
+  "estado"
+]);
+
+let ultimoCampoContexto = null;
+
+function gerarTextoPortugues100() {
+  const blocos = [
+    "Texto de exemplo para validar campos de comentários de formulário com conteúdo coerente e natural.",
+    "Mensagem padrão criada para testes de interface em campos de texto com cem caracteres de preenchimento.",
+    "Conteúdo de teste para simular escrita real em campos de texto e comentário de cadastro e descrição."
+  ];
+
+  let texto = blocos[Math.floor(Math.random() * blocos.length)];
+  if (texto.length > 100)
+    return texto.slice(0, 100);
+
+  if (texto.length < 100)
+    return `${texto}${".".repeat(100 - texto.length)}`;
+
+  return texto;
+}
+
 function obterValorPorTipo(tipoCampo, identidade) {
   switch (tipoCampo) {
+    case "texto":
+      return identidade.texto;
     case "nome":
       return identidade.nomeCompleto;
+    case "nomeMae":
+      return identidade.nomeMae;
     case "firstName":
       return identidade.primeiroNome;
     case "lastName":
@@ -54,6 +102,10 @@ function obterValorPorTipo(tipoCampo, identidade) {
       return identidade.dataNascimento;
     case "cep":
       return identidade.endereco.cep || "";
+    case "cepGoiania":
+      return gerarCEPGoiania();
+    case "cepCuritiba":
+      return gerarCEPCuritiba();
     case "logradouro":
       return identidade.endereco.logradouro || "Rua de Teste";
     case "numero":
@@ -63,13 +115,238 @@ function obterValorPorTipo(tipoCampo, identidade) {
     case "bairro":
       return identidade.endereco.bairro || "Centro";
     case "cidade":
-      return identidade.endereco.cidade || "Curitiba";
+      return identidade.endereco.cidade || "Curitiba" || "Goiania";
     case "estado":
-      return identidade.endereco.estado || "PR";
+      return identidade.endereco.estado || "PR" || "GO";
     default:
       return "";
   }
 }
+
+function ehElementoDOM(valor) {
+  return valor instanceof Element;
+}
+
+function ehCampoMapeavel(elemento) {
+  if (!ehElementoDOM(elemento))
+    return false;
+
+  if (elemento.matches("input, textarea, select"))
+    return true;
+
+  if (elemento.isContentEditable)
+    return true;
+
+  const role = (elemento.getAttribute("role") || "").toLowerCase();
+  return role === "textbox" || role === "combobox";
+}
+
+function encontrarCampoMapeavel(elemento) {
+  if (!ehElementoDOM(elemento))
+    return null;
+
+  return elemento.closest('input, textarea, select, [contenteditable="true"], [role="textbox"], [role="combobox"]');
+}
+
+function registrarCampoContexto(elemento) {
+  const campo = encontrarCampoMapeavel(elemento);
+  if (!campo)
+    return;
+
+  ultimoCampoContexto = campo;
+}
+
+function obterCampoContextoAtual() {
+  if (ultimoCampoContexto && document.contains(ultimoCampoContexto))
+    return ultimoCampoContexto;
+
+  const campoAtivo = encontrarCampoMapeavel(document.activeElement);
+  if (campoAtivo)
+    return campoAtivo;
+
+  return null;
+}
+
+function obterHostAtual() {
+  return window.location.host || "default";
+}
+
+function gerarCaminhoElemento(elemento) {
+  const partes = [];
+  let atual = elemento;
+
+  while (atual && atual.nodeType === Node.ELEMENT_NODE && atual !== document.body) {
+    const tag = (atual.tagName || "").toLowerCase();
+    if (!tag)
+      break;
+
+    let indice = 1;
+    let irmao = atual.previousElementSibling;
+    while (irmao) {
+      if ((irmao.tagName || "").toLowerCase() === tag)
+        indice += 1;
+      irmao = irmao.previousElementSibling;
+    }
+
+    partes.push(`${tag}:nth-of-type(${indice})`);
+    atual = atual.parentElement;
+  }
+
+  partes.push("body");
+  return partes.reverse().join(" > ");
+}
+
+function obterIdentificadorCampo(campo) {
+  if (!ehCampoMapeavel(campo))
+    return "";
+
+  const tag = (campo.tagName || "").toLowerCase();
+  const tipo = (campo.type || "").toLowerCase();
+  const id = (campo.id || "").trim();
+  const name = (campo.name || "").trim();
+  const dataTestId = (campo.getAttribute("data-testid") || "").trim();
+  const ariaLabel = (campo.getAttribute("aria-label") || "").trim();
+
+  if (id)
+    return `${tag}|${tipo}|id:${normalizar(id)}`;
+
+  if (name)
+    return `${tag}|${tipo}|name:${normalizar(name)}`;
+
+  if (dataTestId)
+    return `${tag}|${tipo}|data-testid:${normalizar(dataTestId)}`;
+
+  if (ariaLabel)
+    return `${tag}|${tipo}|aria-label:${normalizar(ariaLabel)}`;
+
+  return `${tag}|${tipo}|path:${gerarCaminhoElemento(campo)}`;
+}
+
+function carregarMapeamentosTodosHosts() {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get({ [STORAGE_FIELD_MAPPINGS_KEY]: {} }, (resultado) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+
+      resolve(resultado[STORAGE_FIELD_MAPPINGS_KEY] || {});
+    });
+  });
+}
+
+function salvarMapeamentosTodosHosts(mapeamentos) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ [STORAGE_FIELD_MAPPINGS_KEY]: mapeamentos }, () => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+async function carregarMapeamentosHostAtual() {
+  const todosHosts = await carregarMapeamentosTodosHosts();
+  return todosHosts[obterHostAtual()] || {};
+}
+
+async function salvarMapeamentoCampo(campo, tipoCampo) {
+  const identificador = obterIdentificadorCampo(campo);
+  if (!identificador)
+    throw new Error("Nao foi possivel identificar o campo selecionado.");
+
+  const todosHosts = await carregarMapeamentosTodosHosts();
+  const host = obterHostAtual();
+  const mapeamentosHost = todosHosts[host] || {};
+  mapeamentosHost[identificador] = tipoCampo;
+  todosHosts[host] = mapeamentosHost;
+
+  await salvarMapeamentosTodosHosts(todosHosts);
+  return identificador;
+}
+
+function obterTipoCampoComMapeamento(campo, mapeamentosHost) {
+  const identificador = obterIdentificadorCampo(campo);
+  if (!identificador)
+    return detectarTipoCampo(campo);
+
+  return mapeamentosHost[identificador] || detectarTipoCampo(campo);
+}
+
+function preencherCampoPorTipo(campo, tipoCampo, identidade) {
+  if (!campo || !tipoCampo)
+    return false;
+
+  const role = (campo.getAttribute && campo.getAttribute("role") || "").toLowerCase();
+
+  if (role === "combobox") {
+    const valorCombobox = tipoCampo === "dataNascimento" ? "" : obterValorPorTipo(tipoCampo, identidade);
+    return selecionarEmComboboxCustom(campo, valorCombobox);
+  }
+
+  if (campo.type === "checkbox") {
+    if (!campo.checked)
+      campo.click();
+    return true;
+  }
+
+  if (campo.type === "radio") {
+    if (!campo.checked)
+      campo.click();
+    return true;
+  }
+
+  const valor = tipoCampo === "dataNascimento"
+    ? gerarDataNascimento(campo)
+    : obterValorPorTipo(tipoCampo, identidade);
+
+  if ((role === "textbox" || campo.isContentEditable) && valor) {
+    campo.focus();
+    campo.textContent = valor;
+    dispararEventos(campo);
+    return true;
+  }
+
+  if (valor) {
+    setarValor(campo, valor);
+    return true;
+  }
+
+  if (campo.tagName === "TEXTAREA") {
+    setarValor(campo, identidade.texto);
+    return true;
+  }
+
+  return false;
+}
+
+async function mapearCampoSelecionado(tipoCampo) {
+  if (!TIPOS_MENU_SUPORTADOS.has(tipoCampo))
+    throw new Error("Tipo de variavel nao suportado no menu de contexto.");
+
+  const campo = obterCampoContextoAtual();
+  if (!campo)
+    throw new Error("Nenhum campo elegivel foi selecionado com o botao direito.");
+
+  const identidade = await montarIdentidade();
+  const preenchido = preencherCampoPorTipo(campo, tipoCampo, identidade);
+  if (!preenchido)
+    throw new Error("Nao foi possivel preencher o campo com a variavel escolhida.");
+
+  const identificador = await salvarMapeamentoCampo(campo, tipoCampo);
+  return { tipoCampo, identificador };
+}
+
+document.addEventListener("contextmenu", (evento) => {
+  registrarCampoContexto(evento.target);
+}, true);
+
+document.addEventListener("focusin", (evento) => {
+  registrarCampoContexto(evento.target);
+}, true);
 
 function elementoVisivel(elemento) {
   if (!elemento)
@@ -191,8 +468,45 @@ function deveIgnorarCampo(campo) {
 }
 
 function gerarSenha() {
-  const base = Math.random().toString(36).slice(2, 8);
-  return `Teste@${base}9`;
+  const maiusculas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const minusculas = "abcdefghijklmnopqrstuvwxyz";
+  const numeros = "0123456789";
+  const especiais = "!@#$%^&*";
+  const todos = `${maiusculas}${minusculas}${numeros}${especiais}`;
+
+  function numeroAleatorio(maximo) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      const array = new Uint32Array(1);
+      window.crypto.getRandomValues(array);
+      return array[0] % maximo;
+    }
+
+    return Math.floor(Math.random() * maximo);
+  }
+
+  function caractereAleatorio(conjunto) {
+    return conjunto[numeroAleatorio(conjunto.length)];
+  }
+
+  const tamanho = numeroAleatorio(5) + 12;
+  const senha = [
+    caractereAleatorio(maiusculas),
+    caractereAleatorio(minusculas),
+    caractereAleatorio(numeros),
+    caractereAleatorio(especiais)
+  ];
+
+  while (senha.length < tamanho)
+    senha.push(caractereAleatorio(todos));
+
+  for (let i = senha.length - 1; i > 0; i -= 1) {
+    const j = numeroAleatorio(i + 1);
+    const atual = senha[i];
+    senha[i] = senha[j];
+    senha[j] = atual;
+  }
+
+  return senha.join("");
 }
 
 function formatarDataISO(data) {
@@ -248,6 +562,7 @@ function gerarDataNascimento(campo) {
 
 async function montarIdentidade() {
   const nomeCompleto = gerarNome();
+  const nomeMae = gerarNomeMae();
   const partes = nomeCompleto.split(" ");
   const primeiroNome = partes[0] || "Joao";
   const ultimoNome = partes.length > 1 ? partes[partes.length - 1] : "Silva";
@@ -270,7 +585,9 @@ async function montarIdentidade() {
   }
 
   return {
+    texto: gerarTextoPortugues100(),
     nomeCompleto,
+    nomeMae,
     primeiroNome,
     ultimoNome,
     cpf: gerarCPF(),
@@ -291,6 +608,11 @@ async function preencherFormulario() {
     return { preenchidos: 0, ignorados: 0 };
 
   const identidade = await montarIdentidade();
+  const mapeamentosHost = await carregarMapeamentosHostAtual().catch((erro) => {
+    console.warn("Falha ao carregar mapeamentos do host:", erro);
+    return {};
+  });
+
   let preenchidos = 0;
   let ignorados = 0;
 
@@ -300,115 +622,9 @@ async function preencherFormulario() {
       return;
     }
 
-    const tipoCampo = detectarTipoCampo(campo);
-
-    if (campo.type === "checkbox") {
-      if (!campo.checked)
-        campo.click();
+    const tipoCampo = obterTipoCampoComMapeamento(campo, mapeamentosHost);
+    if (preencherCampoPorTipo(campo, tipoCampo, identidade))
       preenchidos += 1;
-      return;
-    }
-
-    if (campo.type === "radio") {
-      if (!campo.checked)
-        campo.click();
-      preenchidos += 1;
-      return;
-    }
-
-    switch (tipoCampo) {
-      case "nome":
-        setarValor(campo, identidade.nomeCompleto);
-        preenchidos += 1;
-        break;
-
-      case "firstName":
-        setarValor(campo, identidade.primeiroNome);
-        preenchidos += 1;
-        break;
-
-      case "lastName":
-        setarValor(campo, identidade.ultimoNome);
-        preenchidos += 1;
-        break;
-
-      case "email":
-        setarValor(campo, identidade.email);
-        preenchidos += 1;
-        break;
-
-      case "cpf":
-        setarValor(campo, identidade.cpf);
-        preenchidos += 1;
-        break;
-
-      case "cnpj":
-        setarValor(campo, identidade.cnpj);
-        preenchidos += 1;
-        break;
-
-      case "telefone":
-        setarValor(campo, identidade.telefone);
-        preenchidos += 1;
-        break;
-
-      case "empresa":
-        setarValor(campo, identidade.empresa);
-        preenchidos += 1;
-        break;
-
-      case "senha":
-        setarValor(campo, identidade.senha);
-        preenchidos += 1;
-        break;
-
-      case "dataNascimento":
-        setarValor(campo, gerarDataNascimento(campo));
-        preenchidos += 1;
-        break;
-
-      case "cep":
-        setarValor(campo, identidade.endereco.cep || identidade.endereco.cep);
-        preenchidos += 1;
-        break;
-
-      case "logradouro":
-        setarValor(campo, identidade.endereco.logradouro || "Rua de Teste");
-        preenchidos += 1;
-        break;
-
-      case "numero":
-        setarValor(campo, identidade.numero);
-        preenchidos += 1;
-        break;
-
-      case "complemento":
-        setarValor(campo, identidade.complemento);
-        preenchidos += 1;
-        break;
-
-      case "bairro":
-        setarValor(campo, identidade.endereco.bairro || "Centro");
-        preenchidos += 1;
-        break;
-
-      case "cidade":
-        setarValor(campo, identidade.endereco.cidade || "Curitiba");
-        preenchidos += 1;
-        break;
-
-      case "estado":
-        setarValor(campo, identidade.endereco.estado || "PR");
-        preenchidos += 1;
-        break;
-
-      default:
-        if (campo.tagName === "TEXTAREA") {
-          setarValor(campo, "Texto de teste automatizado");
-          preenchidos += 1;
-        }
-        break;
-    }
   });
 
   const preenchidosCustom = preencherElementosCustomizados(identidade);
@@ -422,6 +638,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .then((resultado) => sendResponse({ status: "sucesso", ...resultado }))
       .catch((error) => {
         console.error("Erro ao preencher formulário:", error);
+        sendResponse({ status: "erro", mensagem: error.message });
+      });
+
+    return true;
+  }
+
+  if (request.action === "assignFieldType") {
+    mapearCampoSelecionado(request.fieldType)
+      .then((resultado) => sendResponse({ status: "sucesso", ...resultado }))
+      .catch((error) => {
+        console.error("Erro ao mapear campo via menu de contexto:", error);
         sendResponse({ status: "erro", mensagem: error.message });
       });
 

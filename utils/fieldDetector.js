@@ -58,6 +58,9 @@ function detectarTipoCampo(input) {
   if (campo.includes("sobrenome") || campo.includes("last name") || campo.includes("lastname"))
     return "lastName";
 
+  if (campo.includes("nome da mae") || campo.includes("mother") || campo.includes("mother name"))
+    return "nomeMae";
+
   if (campo.includes("nome completo") || campo.includes("full name") || campo.includes("nome"))
     return "nome";
 
