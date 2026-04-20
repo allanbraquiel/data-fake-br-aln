@@ -33,6 +33,8 @@
         "generators/phone.js",
         "generators/email.js",
         "generators/cep.js",
+        "generators/rg.js",
+        "generators/profession.js",
         "utils/addressService.js",
         "utils/fieldDetector.js",
         "content.js"

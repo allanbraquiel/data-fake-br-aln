@@ -2,17 +2,18 @@ const MENU_ROOT_ID = "fake-data-root";
 const MENU_ITEM_PREFIX = "fake-data-fill:";
 
 const CAMPO_OPCOES = [
-  { key: "texto", label: "Texto (100 caracteres)" },
   { key: "nome", label: "Nome completo" },
   { key: "firstName", label: "Primeiro nome" },
   { key: "lastName", label: "Sobrenome" },
   { key: "nomeMae", label: "Nome da Mãe" },
   { key: "email", label: "Email" },
+  { key: "senha", label: "Senha" },
+  { key: "rg", label: "RG" },
   { key: "cpf", label: "CPF" },
   { key: "cnpj", label: "CNPJ" },
   { key: "telefone", label: "Telefone" },
   { key: "empresa", label: "Empresa" },
-  { key: "senha", label: "Senha" },
+  { key: "profissao", label: "Profissão" },
   { key: "dataNascimento", label: "Data de nascimento" },
   { key: "cepGoiania", label: "CEP Goiania" },
   { key: "cepCuritiba", label: "CEP Curitiba" },
@@ -21,7 +22,9 @@ const CAMPO_OPCOES = [
   { key: "complemento", label: "Complemento" },
   { key: "bairro", label: "Bairro" },
   { key: "cidade", label: "Cidade" },
-  { key: "estado", label: "Estado (UF)" }
+  { key: "estado", label: "Estado (UF)" },
+  { key: "texto", label: "Texto (100 caracteres)" },
+  { key: "paragrafo", label: "Parágrafo (+100 caracteres)" }
 ];
 
 function criarMenusContexto() {

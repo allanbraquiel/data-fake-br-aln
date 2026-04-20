@@ -40,6 +40,7 @@ const TIPOS_MENU_SUPORTADOS = new Set([
   "email",
   "cpf",
   "cnpj",
+  "rg",
   "telefone",
   "empresa",
   "senha",
@@ -52,52 +53,73 @@ const TIPOS_MENU_SUPORTADOS = new Set([
   "complemento",
   "bairro",
   "cidade",
-  "estado"
+  "estado",
+  "profissao",
+  "paragrafo"
 ]);
 
 let ultimoCampoContexto = null;
 
-function gerarTextoPortugues100() {
+function gerarParagrafo() {
   const blocos = [
-    "Texto de exemplo para validar campos de comentários de formulário com conteúdo coerente e natural.",
-    "Mensagem padrão criada para testes de interface em campos de texto com cem caracteres de preenchimento.",
-    "Conteúdo de teste para simular escrita real em campos de texto e comentário de cadastro e descrição."
+    "Acima de tudo, é fundamental ressaltar que a valorização de fatores subjetivos pode nos levar a considerar a reestruturação dos modos de operação convencionais.",
+    "Evidentemente, a valorização de fatores subjetivos possibilita uma melhor visão global dos índices pretendidos.",
+    "Percebemos, cada vez mais, que o entendimento das metas propostas estimula a padronização dos relacionamentos verticais entre as hierarquias.",
+    "Nunca é demais lembrar o peso e o significado destes problemas, uma vez que a consolidação das estruturas pode nos levar a considerar a reestruturação dos paradigmas corporativos.",
+    "Do mesmo modo, a necessidade de renovação processual aponta para a melhoria dos paradigmas corporativos.",
+    "Assim mesmo, a percepção das dificuldades promove a alavancagem dos métodos utilizados na avaliação de resultados.",
+    "Podemos já vislumbrar o modo pelo qual a constante divulgação das informações acarreta um processo de reformulação e modernização dos paradigmas corporativos.",
+    "A prática cotidiana prova que o acompanhamento das preferências de consumo cumpre um papel essencial na formulação do retorno esperado a longo prazo.",
+    "O empenho em analisar o impacto na agilidade decisória agrega valor ao estabelecimento do retorno esperado a longo prazo.",
+    "A certificação de metodologias que nos auxiliam a lidar com o desafiador cenário globalizado é uma das consequências dessas questõess, que se fazem cada vez mais presentes no dia a dia das organizações."
   ];
 
-  let texto = blocos[Math.floor(Math.random() * blocos.length)];
-  if (texto.length > 100)
-    return texto.slice(0, 100);
+  return blocos[Math.floor(Math.random() * blocos.length)];
+}
 
-  if (texto.length < 100)
-    return `${texto}${".".repeat(100 - texto.length)}`;
+function gerarTextoPortugues100() {
+  const blocos = [
+    "A valorização de fatores subjetivos otimiza os índices pretendidos pela organização.",
+    "O entendimento das metas propostas estimula a padronização das hierarquias internas.",
+    "A consolidação das estruturas redefine os paradigmas corporativos atualmente vigentes.",
+    "A necessidade de renovação processual aponta para a melhoria contínua dos paradigmas.",
+    "A percepção das dificuldades promove a alavancagem dos métodos de avaliação adotados.",
+    "A constante divulgação das informações moderniza os paradigmas corporativos existentes.",
+    "O acompanhamento das preferências de consumo contribui para o retorno esperado.",
+    "O impacto na agilidade decisória agrega valor ao estabelecimento das metas propostas.",
+    "A certificação de metodologias auxilia na adaptação ao cenário globalizado competitivo.",
+    "A reestruturação dos modos convencionais otimiza os processos organizacionais internos."
+  ];
 
-  return texto;
+  return blocos[Math.floor(Math.random() * blocos.length)];
 }
 
 function obterValorPorTipo(tipoCampo, identidade) {
   switch (tipoCampo) {
-    case "texto":
-      return identidade.texto;
     case "nome":
       return identidade.nomeCompleto;
-    case "nomeMae":
-      return identidade.nomeMae;
     case "firstName":
       return identidade.primeiroNome;
     case "lastName":
       return identidade.ultimoNome;
+    case "nomeMae":
+      return identidade.nomeMae;
     case "email":
       return identidade.email;
+    case "senha":
+      return identidade.senha;
     case "cpf":
       return identidade.cpf;
     case "cnpj":
       return identidade.cnpj;
+    case "rg":
+      return identidade.rg;
     case "telefone":
       return identidade.telefone;
     case "empresa":
       return identidade.empresa;
-    case "senha":
-      return identidade.senha;
+    case "profissao":
+      return identidade.profissao;
     case "dataNascimento":
       return identidade.dataNascimento;
     case "cep":
@@ -118,6 +140,10 @@ function obterValorPorTipo(tipoCampo, identidade) {
       return identidade.endereco.cidade || "Curitiba" || "Goiania";
     case "estado":
       return identidade.endereco.estado || "PR" || "GO";
+    case "texto":
+      return identidade.texto;
+    case "paragrafo":
+      return identidade.paragrafo;
     default:
       return "";
   }
@@ -592,11 +618,14 @@ async function montarIdentidade() {
     ultimoNome,
     cpf: gerarCPF(),
     cnpj: gerarCNPJ(),
+    rg: gerarRG(),
     telefone: gerarTelefone(),
     email: gerarEmail(nomeCompleto),
     empresa: gerarEmpresa(),
     senha: gerarSenha(),
-    numero: String(Math.floor(Math.random() * 9999) + 1),
+    profissao: gerarProfissao(),
+    paragrafo: gerarParagrafo(),
+    numero: String(Math.floor(Math.random() * 900) + 100),
     complemento: "Apto 101",
     endereco
   };

@@ -43,6 +43,12 @@ function detectarTipoCampo(input) {
   if (campo.includes("cnpj"))
     return "cnpj";
 
+  if (campo.includes("rg") || campo.includes("registro geral") || campo.includes("identidade") || campo.includes("identity"))
+    return "rg";
+
+  if (campo.includes("profissao") || campo.includes("profissional") || campo.includes("occupation") || campo.includes("profession") || campo.includes("cargo") || campo.includes("ocupacao"))
+    return "profissao";
+
   if (campo.includes("razao social") || campo.includes("nome da empresa") || campo.includes("empresa") || campo.includes("company") || campo.includes("fantasia"))
     return "empresa";
 
@@ -91,5 +97,8 @@ function detectarTipoCampo(input) {
   if (campo.includes("estado") || campo.includes("uf") || campo.includes("state"))
     return "estado";
 
+  if (campo.includes("paragrafo") || campo.includes("paragraph") || campo.includes("descricao") || campo.includes("description") || campo.includes("observacao") || campo.includes("comentario") || campo.includes("comment"))
+    return "paragrafo";
+  
   return "texto";
 }
