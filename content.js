@@ -32,7 +32,6 @@ function setarValor(campo, valor) {
 
 const STORAGE_FIELD_MAPPINGS_KEY = "fieldMappingsByHost";
 const TIPOS_MENU_SUPORTADOS = new Set([
-  "texto",
   "nome",
   "firstName",
   "lastName",
@@ -55,6 +54,7 @@ const TIPOS_MENU_SUPORTADOS = new Set([
   "cidade",
   "estado",
   "profissao",
+  "texto",
   "paragrafo"
 ]);
 

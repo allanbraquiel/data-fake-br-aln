@@ -4,10 +4,11 @@ const nomes = [
   "Gustavo","Camila","Bruno","Larissa","Felipe",
   "Amanda","Ricardo","Sofia","Diego","Isabela", 
   "Leonardo","Gabriela","Matheus","Carolina","Vinicius",
-  "Beatriz","Eduardo","Larissa","Thiago","Priscila",
-  "André","Aline","Renato","Vanessa","Fábio",
-  "Patrícia","Bruna","Gustavo","Sabrina","Rafael",
-  "Camila","Felipe","Mariana","Diego","Isabela"
+  "Beatriz","Eduardo","Thiago","Priscila",
+  "André","Renato","Vanessa","Fábio",
+  "Patrícia","Bruna","Sabrina",
+  "Mauricio","Otavio","Cesar","Igor","Daniel",
+  "Henrique","Rodrigo","Caio","Wesley","Afonso",
 ];
 
 const sobrenomes = [
@@ -20,7 +21,9 @@ const sobrenomes = [
   "Siqueira","Castro","Campos","Vasconcelos",
   "Monteiro","Farias","Lopes","Macedo",
   "Gonçalves","Vieira","Correia","Borges",
-  "Mendes","Assis","Duarte"
+  "Mendes","Assis","Duarte",
+  "Fernandes","Tavares","Bandeira","Barros","Leal",
+  "Peixoto","Matos","Queiroz","Diniz","Pacheco"
 ];
 
 const nomesFemininos = [
@@ -32,7 +35,9 @@ const nomesFemininos = [
   "Carla", "Flávia", "Tatiana", "Cíntia", "Márcia",
   "Simone", "Eliane", "Rosana", "Adriana", "Sílvia",
   "Cristina", "Débora", "Elenice", "Fátima", "Gisele",
-  "Heloísa", "Inês", "Jéssica", "Kátia", "Lívia"
+  "Heloísa", "Inês", "Jéssica", "Kátia", "Lívia",
+  "Lorena", "Natália", "Bianca", "Clara", "Cecília",
+  "Manuela", "Mirela", "Talita", "Verônica", "Yasmin"
 ];
 
 function gerarNome() {
