@@ -39,6 +39,7 @@ const TIPOS_MENU_SUPORTADOS = new Set([
   "email",
   "cpf",
   "cnpj",
+  "cnpjAlfanumerico",
   "rg",
   "telefone",
   "empresa",
@@ -112,6 +113,8 @@ function obterValorPorTipo(tipoCampo, identidade) {
       return identidade.cpf;
     case "cnpj":
       return identidade.cnpj;
+    case "cnpjAlfanumerico":
+      return identidade.cnpjAlfanumerico;
     case "rg":
       return identidade.rg;
     case "telefone":
@@ -618,6 +621,7 @@ async function montarIdentidade() {
     ultimoNome,
     cpf: gerarCPF(),
     cnpj: gerarCNPJ(),
+    cnpjAlfanumerico: gerarCNPJAlfanumerico(),
     rg: gerarRG(),
     telefone: gerarTelefone(),
     email: gerarEmail(nomeCompleto),

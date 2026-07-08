@@ -11,6 +11,7 @@ const CAMPO_OPCOES = [
   { key: "rg", label: "RG" },
   { key: "cpf", label: "CPF" },
   { key: "cnpj", label: "CNPJ" },
+  { key: "cnpjAlfanumerico", label: "CNPJ Alfanumerico" },
   { key: "telefone", label: "Telefone" },
   { key: "empresa", label: "Empresa" },
   { key: "profissao", label: "Profissão" },

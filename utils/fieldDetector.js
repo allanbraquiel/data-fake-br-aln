@@ -37,6 +37,9 @@ function detectarTipoCampo(input) {
 
   const campo = normalizar(atributos.join(" "));
 
+  if (campo.includes("cnpj alfanumerico") || campo.includes("cnpj alfa") || campo.includes("cnpj alfanum"))
+    return "cnpjAlfanumerico";
+
   if (campo.includes("cpf"))
     return "cpf";
 
