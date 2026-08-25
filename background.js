@@ -9,6 +9,7 @@ const CAMPO_OPCOES = [
   { key: "email", label: "Email" },
   { key: "senha", label: "Senha" },
   { key: "rg", label: "RG" },
+  { key: "cns", label: "CNS" },
   { key: "cpf", label: "CPF" },
   { key: "cnpj", label: "CNPJ" },
   { key: "cnpjAlfanumerico", label: "CNPJ Alfanumerico" },

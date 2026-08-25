@@ -49,6 +49,9 @@ function detectarTipoCampo(input) {
   if (campo.includes("rg") || campo.includes("registro geral") || campo.includes("identidade") || campo.includes("identity"))
     return "rg";
 
+  if (campo.includes("cns") || campo.includes("cartao nacional de saude") || campo.includes("cartao sus") || campo.includes("sus"))
+    return "cns";
+
   if (campo.includes("profissao") || campo.includes("profissional") || campo.includes("occupation") || campo.includes("profession") || campo.includes("cargo") || campo.includes("ocupacao"))
     return "profissao";
 

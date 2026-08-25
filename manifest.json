@@ -46,6 +46,7 @@
         "generators/email.js",
         "generators/cep.js",
         "generators/rg.js",
+        "generators/cns.js",
         "generators/profession.js",
         "utils/addressService.js",
         "utils/fieldDetector.js",
