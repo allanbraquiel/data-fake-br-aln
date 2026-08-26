@@ -1,0 +1,10 @@
+{
+  "name": "data-fake-br-aln",
+  "version": "1.2.0",
+  "description": "Extensão Chrome para preenchimento de formulários com dados fictícios brasileiros",
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "license": "MIT"
+}

@@ -4,6 +4,17 @@ function dispararEventos(campo) {
   campo.dispatchEvent(new Event("blur", { bubbles: true }));
 }
 
+function setarValorNativo(campo, valor) {
+  const prototipo = campo.tagName === "TEXTAREA"
+    ? window.HTMLTextAreaElement.prototype
+    : campo.tagName === "SELECT"
+      ? window.HTMLSelectElement.prototype
+      : window.HTMLInputElement.prototype;
+
+  const setter = Object.getOwnPropertyDescriptor(prototipo, "value").set;
+  setter.call(campo, valor);
+}
+
 function setarValor(campo, valor) {
   if (campo.tagName === "SELECT") {
     const opcoes = Array.from(campo.options || []);
@@ -15,18 +26,18 @@ function setarValor(campo, valor) {
     });
 
     if (opcaoExata) {
-      campo.value = opcaoExata.value;
+      setarValorNativo(campo, opcaoExata.value);
     } else {
       const opcaoValida = opcoes.find((opcao) => (opcao.value || "").trim() !== "");
       if (opcaoValida)
-        campo.value = opcaoValida.value;
+        setarValorNativo(campo, opcaoValida.value);
     }
 
     dispararEventos(campo);
     return;
   }
 
-  campo.value = valor;
+  setarValorNativo(campo, valor);
   dispararEventos(campo);
 }
 
@@ -47,8 +58,8 @@ const TIPOS_MENU_SUPORTADOS = new Set([
   "senha",
   "dataNascimento",
   "cep",
-  "cepGoiania",
-  "cepCuritiba",
+  "cepGO",
+  "cepUF",
   "logradouro",
   "numero",
   "complemento",
@@ -130,10 +141,10 @@ function obterValorPorTipo(tipoCampo, identidade) {
       return identidade.dataNascimento;
     case "cep":
       return identidade.endereco.cep || "";
-    case "cepGoiania":
-      return gerarCEPGoiania();
-    case "cepCuritiba":
-      return gerarCEPCuritiba();
+    case "cepGO":
+      return gerarCEP("GO");
+    case "cepUF":
+      return gerarCEPOutraUF();
     case "logradouro":
       return identidade.endereco.logradouro || "Rua de Teste";
     case "numero":
@@ -599,13 +610,13 @@ async function montarIdentidade() {
   const primeiroNome = partes[0] || "Joao";
   const ultimoNome = partes.length > 1 ? partes[partes.length - 1] : "Silva";
 
-  const cep = gerarCEP();
+  const local = gerarEnderecoLocal();
   let endereco = {
-    cep,
+    cep: local.cep,
     logradouro: "Rua de Teste",
     bairro: "Centro",
-    cidade: "Curitiba",
-    estado: "PR"
+    cidade: local.cidade,
+    estado: local.estado
   };
 
   try {

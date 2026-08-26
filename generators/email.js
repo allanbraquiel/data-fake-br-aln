@@ -19,12 +19,9 @@ function gerarEmail(nomeCompleto) {
 
   let partes = nomeCompleto
     .toLowerCase()
-    .replace("ã","a")
-    .replace("á","a")
-    .replace("é","e")
-    .replace("í","i")
-    .replace("ó","o")
-    .replace("ú","u")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ç/g, "c")
     .split(" ");
 
   let primeiro = partes[0];
