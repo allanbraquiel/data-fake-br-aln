@@ -455,7 +455,7 @@ function selecionarEmComboboxCustom(elemento, valor) {
   return false;
 }
 
-function preencherElementosCustomizados(identidade) {
+function preencherElementosCustomizados(identidade, apenasVazios) {
   let preenchidosCustom = 0;
 
   const elementos = Array.from(document.querySelectorAll('[role="combobox"], [role="textbox"], [contenteditable="true"], [role="checkbox"], [role="radio"], [role="switch"]'));
@@ -465,6 +465,9 @@ function preencherElementosCustomizados(identidade) {
       return;
 
     if (elemento.getAttribute("aria-disabled") === "true")
+      return;
+
+    if (apenasVazios && campoJaPreenchido(elemento))
       return;
 
     const role = (elemento.getAttribute("role") || "").toLowerCase();
@@ -512,6 +515,25 @@ function deveIgnorarCampo(campo) {
     tipo === "button" ||
     tipo === "reset"
   );
+}
+
+function campoJaPreenchido(campo) {
+  if (!campo)
+    return false;
+
+  const tipo = (campo.type || "").toLowerCase();
+
+  if (tipo === "checkbox" || tipo === "radio")
+    return campo.checked;
+
+  if (campo.isContentEditable)
+    return (campo.textContent || "").trim() !== "";
+
+  const role = (campo.getAttribute && campo.getAttribute("role") || "").toLowerCase();
+  if (role === "textbox" || role === "combobox")
+    return (campo.textContent || "").trim() !== "" || (campo.value || "").trim() !== "";
+
+  return (campo.value || "").trim() !== "";
 }
 
 function gerarSenha() {
@@ -693,56 +715,99 @@ async function preencherFormulario(opcoes) {
   }
 
   try {
-    const campos = document.querySelectorAll("input, textarea, select");
-    if (!campos.length)
-      return { preenchidos: 0, ignorados: 0, relatorio };
+    const resultado = await preencherFrameAtual(config, perfil, relatorio);
 
-    const identidade = await montarIdentidade();
-    const mapeamentosHost = await carregarMapeamentosHostAtual().catch((erro) => {
-      console.warn("Falha ao carregar mapeamentos do host:", erro);
-      return {};
-    });
-
-    let preenchidos = 0;
-    let ignorados = 0;
-
-    campos.forEach((campo) => {
-      const motivo = obterMotivoIgnorar(campo);
-      if (motivo) {
-        ignorados += 1;
-        registrarRelatorio(relatorio, campo, "", "ignorado", motivo);
-        return;
-      }
-
-      const tipoCampo = obterTipoCampoComMapeamento(campo, mapeamentosHost);
-
-      if (!perfilPermiteCampo(perfil, tipoCampo)) {
-        ignorados += 1;
-        registrarRelatorio(relatorio, campo, tipoCampo, "ignorado", "fora_do_perfil");
-        return;
-      }
-
-      if (preencherCampoPorTipo(campo, tipoCampo, identidade)) {
-        preenchidos += 1;
-        registrarRelatorio(relatorio, campo, tipoCampo, "preenchido", "");
-      } else {
-        ignorados += 1;
-        registrarRelatorio(relatorio, campo, tipoCampo, "ignorado", "sem_valor");
-      }
-    });
-
-    const preenchidosCustom = preencherElementosCustomizados(identidade);
+    let resultadoIframes = { preenchidos: 0, ignorados: 0 };
+    if (config.skipIframes !== true)
+      resultadoIframes = await preencherIframesViaBackground(config, relatorio);
 
     return {
-      preenchidos: preenchidos + preenchidosCustom,
-      ignorados,
-      preenchidosCustom,
+      preenchidos: resultado.preenchidos + resultadoIframes.preenchidos,
+      ignorados: resultado.ignorados + resultadoIframes.ignorados,
+      preenchidosCustom: resultado.preenchidosCustom,
       perfil: perfil.label,
       relatorio
     };
   } finally {
     limparSeed();
   }
+}
+
+async function preencherFrameAtual(config, perfil, relatorio) {
+  const campos = document.querySelectorAll("input, textarea, select");
+  if (!campos.length)
+    return { preenchidos: 0, ignorados: 0, preenchidosCustom: 0 };
+
+  const identidade = await montarIdentidade();
+  const mapeamentosHost = await carregarMapeamentosHostAtual().catch((erro) => {
+    console.warn("Falha ao carregar mapeamentos do host:", erro);
+    return {};
+  });
+
+  let preenchidos = 0;
+  let ignorados = 0;
+  const apenasVazios = config.apenasVazios === true;
+
+  campos.forEach((campo) => {
+    const motivo = obterMotivoIgnorar(campo);
+    if (motivo) {
+      ignorados += 1;
+      registrarRelatorio(relatorio, campo, "", "ignorado", motivo);
+      return;
+    }
+
+    if (apenasVazios && campoJaPreenchido(campo)) {
+      ignorados += 1;
+      registrarRelatorio(relatorio, campo, "", "ignorado", "ja_preenchido");
+      return;
+    }
+
+    const tipoCampo = obterTipoCampoComMapeamento(campo, mapeamentosHost);
+
+    if (!perfilPermiteCampo(perfil, tipoCampo)) {
+      ignorados += 1;
+      registrarRelatorio(relatorio, campo, tipoCampo, "ignorado", "fora_do_perfil");
+      return;
+    }
+
+    if (preencherCampoPorTipo(campo, tipoCampo, identidade)) {
+      preenchidos += 1;
+      registrarRelatorio(relatorio, campo, tipoCampo, "preenchido", "");
+    } else {
+      ignorados += 1;
+      registrarRelatorio(relatorio, campo, tipoCampo, "ignorado", "sem_valor");
+    }
+  });
+
+  const preenchidosCustom = preencherElementosCustomizados(identidade, apenasVazios);
+
+  return { preenchidos: preenchidos + preenchidosCustom, ignorados, preenchidosCustom };
+}
+
+function preencherIframesViaBackground(config, relatorio) {
+  return new Promise((resolve) => {
+    const opcoes = { perfil: config.perfil };
+    if (config.seed !== undefined && config.seed !== null && config.seed !== "")
+      opcoes.seed = config.seed;
+    if (config.apenasVazios === true)
+      opcoes.apenasVazios = true;
+
+    try {
+      chrome.runtime.sendMessage({ action: "fillAllFrames", opcoes }, (response) => {
+        if (chrome.runtime.lastError || !response || response.status !== "sucesso") {
+          resolve({ preenchidos: 0, ignorados: 0 });
+          return;
+        }
+
+        if (Array.isArray(response.relatorio))
+          relatorio.push(...response.relatorio);
+
+        resolve({ preenchidos: response.preenchidos || 0, ignorados: response.ignorados || 0 });
+      });
+    } catch (error) {
+      resolve({ preenchidos: 0, ignorados: 0 });
+    }
+  });
 }
 
 function origemMensagemValida(sender) {

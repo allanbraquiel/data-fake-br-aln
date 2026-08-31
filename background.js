@@ -80,3 +80,55 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     }
   });
 });
+
+function enviarParaFrame(tabId, frameId, opcoes) {
+  return new Promise((resolve) => {
+    const opcoesFrame = { ...opcoes, skipIframes: true };
+    chrome.tabs.sendMessage(tabId, { action: "fillForm", opcoes: opcoesFrame }, { frameId }, (response) => {
+      if (chrome.runtime.lastError || !response || response.status !== "sucesso") {
+        resolve({ preenchidos: 0, ignorados: 0, relatorio: [] });
+        return;
+      }
+
+      resolve({
+        preenchidos: response.preenchidos || 0,
+        ignorados: response.ignorados || 0,
+        relatorio: Array.isArray(response.relatorio) ? response.relatorio : []
+      });
+    });
+  });
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action !== "fillAllFrames")
+    return;
+
+  const tabId = sender.tab && sender.tab.id;
+  const frameIdTopo = sender.frameId;
+
+  if (typeof tabId !== "number") {
+    sendResponse({ status: "erro", mensagem: "Tab invalida." });
+    return;
+  }
+
+  chrome.webNavigation.getAllFrames({ tabId }, async (frames) => {
+    if (chrome.runtime.lastError || !Array.isArray(frames)) {
+      sendResponse({ status: "sucesso", preenchidos: 0, ignorados: 0, relatorio: [] });
+      return;
+    }
+
+    const framesAlvo = frames.filter((frame) => frame.frameId !== frameIdTopo);
+
+    const resultados = await Promise.all(
+      framesAlvo.map((frame) => enviarParaFrame(tabId, frame.frameId, request.opcoes || {}))
+    );
+
+    const preenchidos = resultados.reduce((soma, r) => soma + r.preenchidos, 0);
+    const ignorados = resultados.reduce((soma, r) => soma + r.ignorados, 0);
+    const relatorio = resultados.flatMap((r) => r.relatorio);
+
+    sendResponse({ status: "sucesso", preenchidos, ignorados, relatorio });
+  });
+
+  return true;
+});

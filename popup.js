@@ -2,6 +2,7 @@ const botaoPreencher = document.getElementById("fill");
 const botaoExportar = document.getElementById("export");
 const selectPerfil = document.getElementById("perfil");
 const inputSeed = document.getElementById("seed");
+const checkboxApenasVazios = document.getElementById("apenasVazios");
 const linkDemo = document.getElementById("linkDemo");
 const status = document.getElementById("status");
 
@@ -18,6 +19,9 @@ function obterOpcoes() {
   const seed = inputSeed.value.trim();
   if (seed !== "")
     opcoes.seed = seed;
+
+  if (checkboxApenasVazios.checked)
+    opcoes.apenasVazios = true;
 
   return opcoes;
 }

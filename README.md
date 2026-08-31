@@ -48,11 +48,13 @@ A extensão identifica os campos por atributos como `name`, `id`, `placeholder`,
 - **CEP para todas as 27 UFs**, com prioridade configurável para Goiás
 - **Suporte a inputs controlados** (React/Vue/Angular) via *native setter*
 - Suporte a campos nativos e alguns componentes customizados
+- **Suporte a iframes** — preenche formulários dentro de iframes (ex.: pagamentos)
 - Marcação automática de `checkbox`/`radio` quando aplicável
 - Menu de contexto (botão direito) para mapear manualmente qual variável preencher em cada campo
 - Geração local de documentos e dados fake (sem backend)
 - Integração com ViaCEP para enriquecer dados de endereço
 - **Perfis de dados** (Pessoa Física, Pessoa Jurídica, Paciente SUS, Completo)
+- **Preencher apenas campos vazios** — não sobrescreve dados já preenchidos no formulário
 - **Seed determinístico** para reproduzir a mesma identidade
 - **Relatório de cobertura** com exportação em CSV
 - **Validação de origem** das mensagens recebidas
@@ -103,6 +105,8 @@ O popup permite escolher um **perfil** que define quais tipos de campo serão pr
 | **Paciente SUS** | Dados de saúde: nome, CNS, CPF, RG, data de nascimento, endereço |
 
 Campos cujo tipo não pertence ao perfil selecionado são ignorados e registrados no relatório como `fora_do_perfil`.
+
+A opção **"Preencher apenas campos vazios"** faz com que a extensão ignore campos que já possuem valor (não sobrescreve dados existentes). Campos ignorados por já estarem preenchidos são registrados no relatório como `ja_preenchido`.
 
 Os perfis são definidos em `utils/profiles.js` e podem ser estendidos facilmente.
 
@@ -253,6 +257,7 @@ A extensão utiliza:
 - `scripting`: para executar lógica de preenchimento
 - `contextMenus`: para exibir opções no clique com botão direito em campos editáveis
 - `storage`: para salvar mapeamentos manuais por campo/host
+- `webNavigation`: para localizar e preencher formulários dentro de iframes
 
 Além disso, faz requisição HTTP para a API pública do **ViaCEP** ao buscar endereço por CEP gerado.
 
@@ -268,6 +273,7 @@ Além disso, faz requisição HTTP para a API pública do **ViaCEP** ao buscar e
 - Nem todo componente customizado de UI será reconhecido/preenchido.
 - Detecção depende de convenções de nomes/labels dos campos.
 - Alguns formulários com máscaras rígidas ou validações complexas podem exigir ajustes.
+- Iframes de origem cruzada (cross-origin) só são preenchidos se a extensão tiver permissão de host para o domínio do iframe.
 - O projeto é voltado ao ecossistema Chromium (manifest v3).
 
 ---
@@ -291,7 +297,7 @@ Sugestões de melhorias:
 - melhorar suporte a bibliotecas de componentes (React/Vue/Angular);
 - adicionar testes automatizados do detector de campos;
 - adicionar geração em lote (CSV/JSON) de múltiplas identidades;
-- adicionar suporte a iframes.
+- suportar iframes aninhados (iframe dentro de iframe).
 
 ---
 

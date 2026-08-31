@@ -3,7 +3,7 @@
   "name": "Data Fake Brasil - ALN",
   "version": "1.2.0",
   "description": "Preenche formulários com dados brasileiros",
-  "permissions": ["activeTab", "scripting", "contextMenus", "storage"],
+  "permissions": ["activeTab", "scripting", "contextMenus", "storage", "webNavigation"],
   "host_permissions": ["https://viacep.com.br/*"],
   "background": {
     "service_worker": "background.js"
@@ -27,6 +27,7 @@
     {
       "matches": ["<all_urls>"],
       "run_at": "document_end",
+      "all_frames": true,
       "js": [
         "generators/person.js",
         "generators/cpf.js",
