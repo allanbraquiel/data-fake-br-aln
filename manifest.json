@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "Data Fake Brasil - ALN",
-  "version": "1.1",
+  "version": "1.2.0",
   "description": "Preenche formulários com dados brasileiros",
   "permissions": ["activeTab", "scripting", "contextMenus", "storage"],
+  "host_permissions": ["https://viacep.com.br/*"],
   "background": {
     "service_worker": "background.js"
   },

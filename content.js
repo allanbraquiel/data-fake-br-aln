@@ -154,9 +154,9 @@ function obterValorPorTipo(tipoCampo, identidade) {
     case "bairro":
       return identidade.endereco.bairro || "Centro";
     case "cidade":
-      return identidade.endereco.cidade || "Curitiba" || "Goiania";
+      return identidade.endereco.cidade || "Goiania";
     case "estado":
-      return identidade.endereco.estado || "PR" || "GO";
+      return identidade.endereco.estado || "GO";
     case "texto":
       return identidade.texto;
     case "paragrafo":
