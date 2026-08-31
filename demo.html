@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Data Fake BR — Página de Demonstração</title>
+	<style>
+		:root {
+			--bg: #f4f6f8;
+			--card: #ffffff;
+			--ink: #1c1917;
+			--muted: #6b7280;
+			--border: #e5e7eb;
+			--accent: #0f766e;
+			--accent-soft: rgba(15, 118, 110, 0.12);
+			--ok: #065f46;
+			--ok-bg: rgba(16, 185, 129, 0.12);
+			--no: #991b1b;
+			--no-bg: rgba(239, 68, 68, 0.12);
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			margin: 0;
+			font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+			background: var(--bg);
+			color: var(--ink);
+			line-height: 1.5;
+		}
+
+		header {
+			background: linear-gradient(135deg, #0f766e, #115e59);
+			color: #f8fafc;
+			padding: 28px 24px;
+			text-align: center;
+		}
+
+		header h1 { margin: 0; font-size: 26px; }
+		header p { margin: 8px 0 0; opacity: 0.9; font-size: 14px; }
+
+		main {
+			max-width: 960px;
+			margin: 0 auto;
+			padding: 24px;
+		}
+
+		.legenda {
+			display: flex;
+			gap: 20px;
+			flex-wrap: wrap;
+			background: var(--card);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 14px 18px;
+			margin-bottom: 24px;
+			font-size: 13px;
+		}
+
+		.legenda .item { display: flex; align-items: center; gap: 8px; }
+		.legenda .dot { width: 12px; height: 12px; border-radius: 3px; }
+		.legenda .dot.ok { background: #10b981; }
+		.legenda .dot.no { background: #ef4444; }
+
+		section {
+			background: var(--card);
+			border: 1px solid var(--border);
+			border-radius: 14px;
+			padding: 20px;
+			margin-bottom: 20px;
+		}
+
+		section h2 {
+			margin: 0 0 4px;
+			font-size: 18px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		section .desc {
+			margin: 0 0 16px;
+			color: var(--muted);
+			font-size: 13px;
+		}
+
+		.badge {
+			font-size: 11px;
+			font-weight: 700;
+			padding: 3px 8px;
+			border-radius: 999px;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		.badge.ok { color: var(--ok); background: var(--ok-bg); }
+		.badge.no { color: var(--no); background: var(--no-bg); }
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+			gap: 14px;
+		}
+
+		.field { display: flex; flex-direction: column; gap: 5px; }
+
+		.field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+
+		.field input,
+		.field select,
+		.field textarea {
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 9px 11px;
+			font-size: 14px;
+			font-family: inherit;
+			background: #fff;
+			color: var(--ink);
+		}
+
+		.field input:focus,
+		.field select:focus,
+		.field textarea:focus {
+			outline: 2px solid var(--accent-soft);
+			border-color: var(--accent);
+		}
+
+		.field input[disabled],
+		.field input[readonly] {
+			background: #f3f4f6;
+			color: #9ca3af;
+		}
+
+		.field textarea { resize: vertical; min-height: 80px; }
+
+		.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+
+		.password-wrap { position: relative; }
+
+		.password-wrap input { width: 100%; padding-right: 40px; }
+
+		.password-toggle {
+			position: absolute;
+			top: 50%;
+			right: 6px;
+			transform: translateY(-50%);
+			border: 0;
+			background: transparent;
+			cursor: pointer;
+			font-size: 16px;
+			line-height: 1;
+			padding: 4px;
+			color: var(--muted);
+		}
+
+		.password-toggle:hover { color: var(--accent); }
+
+		.nota {
+			margin-top: 12px;
+			font-size: 12px;
+			color: var(--muted);
+			background: var(--accent-soft);
+			border-radius: 8px;
+			padding: 8px 12px;
+		}
+
+		.nota.no { background: var(--no-bg); color: var(--no); }
+
+		.acoes {
+			text-align: center;
+			margin: 8px 0 24px;
+		}
+
+		.acoes button {
+			border: 0;
+			border-radius: 10px;
+			padding: 12px 22px;
+			background: linear-gradient(135deg, var(--accent), #115e59);
+			color: #f8fafc;
+			font-size: 14px;
+			font-weight: 700;
+			cursor: pointer;
+		}
+
+		.acoes button:hover { opacity: 0.92; }
+	</style>
+</head>
+<body>
+
+	<header>
+		<h1>Data Fake BR — Página de Demonstração</h1>
+		<p>Valide a assertividade do preenchimento inteligente e do menu de contexto.</p>
+	</header>
+
+	<main>
+		<div class="legenda">
+			<div class="item"><span class="dot ok"></span> Campos que a extensão preenche</div>
+			<div class="item"><span class="dot no"></span> Campos que NÃO são preenchidos</div>
+		</div>
+
+		<div class="acoes">
+			<button type="button" onclick="window.location.reload()">Limpar / recarregar página</button>
+		</div>
+
+		<!-- ============ DADOS PESSOAIS ============ -->
+		<section>
+			<h2>Dados Pessoais <span class="badge ok">preenche</span></h2>
+			<p class="desc">Campos reconhecidos por nome, label e placeholder.</p>
+			<div class="grid">
+				<div class="field">
+					<label for="nomeCompleto">Nome completo</label>
+					<input id="nomeCompleto" name="nomeCompleto" type="text" placeholder="Digite seu nome completo">
+				</div>
+				<div class="field">
+					<label for="primeiroNome">Primeiro nome</label>
+					<input id="primeiroNome" name="primeiroNome" type="text" placeholder="Primeiro nome">
+				</div>
+				<div class="field">
+					<label for="sobrenome">Sobrenome</label>
+					<input id="sobrenome" name="sobrenome" type="text" placeholder="Sobrenome">
+				</div>
+				<div class="field">
+					<label for="nomeMae">Nome da Mãe</label>
+					<input id="nomeMae" name="nomeMae" type="text" placeholder="Nome da mãe">
+				</div>
+				<div class="field">
+					<label for="dataNascimento">Data de nascimento</label>
+					<input id="dataNascimento" name="dataNascimento" type="date">
+				</div>
+				<div class="field">
+					<label for="profissao">Profissão</label>
+					<input id="profissao" name="profissao" type="text" placeholder="Profissão">
+				</div>
+			</div>
+		</section>
+
+		<!-- ============ DOCUMENTOS ============ -->
+		<section>
+			<h2>Documentos <span class="badge ok">preenche</span></h2>
+			<p class="desc">Documentos gerados com validação oficial (CPF, CNPJ, CNS, RG).</p>
+			<div class="grid">
+				<div class="field">
+					<label for="cpf">CPF</label>
+					<input id="cpf" name="cpf" type="text" placeholder="000.000.000-00">
+				</div>
+				<div class="field">
+					<label for="cnpj">CNPJ</label>
+					<input id="cnpj" name="cnpj" type="text" placeholder="00.000.000/0000-00">
+				</div>
+				<div class="field">
+					<label for="cnpjAlfanumerico">CNPJ Alfanumérico</label>
+					<input id="cnpjAlfanumerico" name="cnpjAlfanumerico" type="text" placeholder="CNPJ alfanumérico">
+				</div>
+				<div class="field">
+					<label for="rg">RG</label>
+					<input id="rg" name="rg" type="text" placeholder="RG">
+				</div>
+				<div class="field">
+					<label for="cns">CNS (Cartão Nacional de Saúde)</label>
+					<input id="cns" name="cns" type="text" placeholder="CNS">
+				</div>
+			</div>
+		</section>
+
+		<!-- ============ CONTATO ============ -->
+		<section>
+			<h2>Contato <span class="badge ok">preenche</span></h2>
+			<p class="desc">E-mail, telefone e senha.</p>
+			<div class="grid">
+				<div class="field">
+					<label for="email">E-mail</label>
+					<input id="email" name="email" type="email" placeholder="email@exemplo.com">
+				</div>
+				<div class="field">
+					<label for="telefone">Telefone</label>
+					<input id="telefone" name="telefone" type="tel" placeholder="(00) 00000-0000">
+				</div>
+				<div class="field">
+					<label for="senha">Senha</label>
+					<div class="password-wrap">
+						<input id="senha" name="senha" type="password" placeholder="Senha">
+						<button type="button" class="password-toggle" id="toggleSenha" aria-label="Mostrar ou ocultar senha" title="Mostrar/ocultar senha">&#128065;</button>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- ============ EMPRESA ============ -->
+		<section>
+			<h2>Empresa <span class="badge ok">preenche</span></h2>
+			<p class="desc">Razão social e nome fantasia.</p>
+			<div class="grid">
+				<div class="field">
+					<label for="empresa">Razão social</label>
+					<input id="empresa" name="empresa" type="text" placeholder="Razão social">
+				</div>
+				<div class="field">
+					<label for="fantasia">Nome fantasia</label>
+					<input id="fantasia" name="fantasia" type="text" placeholder="Nome fantasia">
+				</div>
+			</div>
+		</section>
+
+		<!-- ============ ENDEREÇO ============ -->
+		<section>
+			<h2>Endereço <span class="badge ok">preenche</span></h2>
+			<p class="desc">CEP, logradouro, número, complemento, bairro, cidade e estado.</p>
+			<div class="grid">
+				<div class="field">
+					<label for="cep">CEP</label>
+					<input id="cep" name="cep" type="text" placeholder="00000-000">
+				</div>
+				<div class="field">
+					<label for="logradouro">Logradouro</label>
+					<input id="logradouro" name="logradouro" type="text" placeholder="Rua / Avenida">
+				</div>
+				<div class="field">
+					<label for="numero">Número</label>
+					<input id="numero" name="numero" type="text" placeholder="Número">
+				</div>
+				<div class="field">
+					<label for="complemento">Complemento</label>
+					<input id="complemento" name="complemento" type="text" placeholder="Complemento">
+				</div>
+				<div class="field">
+					<label for="bairro">Bairro</label>
+					<input id="bairro" name="bairro" type="text" placeholder="Bairro">
+				</div>
+				<div class="field">
+					<label for="cidade">Cidade</label>
+					<input id="cidade" name="cidade" type="text" placeholder="Cidade">
+				</div>
+				<div class="field">
+					<label for="estado">Estado (UF)</label>
+					<input id="estado" name="estado" type="text" placeholder="UF">
+				</div>
+			</div>
+		</section>
+
+		<!-- ============ TEXTOS ============ -->
+		<section>
+			<h2>Textos <span class="badge ok">preenche</span></h2>
+			<p class="desc">Texto curto e parágrafo em português.</p>
+			<div class="grid">
+				<div class="field">
+					<label for="texto">Texto</label>
+					<input id="texto" name="texto" type="text" placeholder="Texto curto">
+				</div>
+				<div class="field">
+					<label for="descricao">Descrição</label>
+					<textarea id="descricao" name="descricao" placeholder="Descrição / observação"></textarea>
+				</div>
+			</div>
+		</section>
+
+		<!-- ============ NÃO PREENCHE ============ -->
+		<section>
+			<h2>Campos que NÃO são preenchidos <span class="badge no">não preenche</span></h2>
+			<p class="desc">Campos ignorados pela extensão: desabilitados, somente leitura, ocultos, arquivo e botões.</p>
+			<div class="grid">
+				<div class="field">
+					<label for="campoDisabled">Campo desabilitado</label>
+					<input id="campoDisabled" name="campoDisabled" type="text" value="valor fixo" disabled>
+				</div>
+				<div class="field">
+					<label for="campoReadonly">Campo somente leitura</label>
+					<input id="campoReadonly" name="campoReadonly" type="text" value="valor fixo" readonly>
+				</div>
+				<div class="field">
+					<label for="campoHidden">Campo oculto</label>
+					<input id="campoHidden" name="campoHidden" type="hidden" value="valor oculto">
+				</div>
+				<div class="field">
+					<label for="arquivo">Campo de arquivo</label>
+					<input id="arquivo" name="arquivo" type="file">
+				</div>
+				<div class="field">
+					<label for="botaoSubmit">Botão de envio</label>
+					<input id="botaoSubmit" name="botaoSubmit" type="submit" value="Enviar">
+				</div>
+				<div class="field">
+					<label for="botaoReset">Botão de limpar</label>
+					<input id="botaoReset" name="botaoReset" type="reset" value="Limpar">
+				</div>
+			</div>
+			<div class="nota no">
+				Os campos acima permanecem intactos após o preenchimento. Use o menu de contexto (botão direito) para mapear manualmente um tipo a um campo, se desejar.
+			</div>
+		</section>
+
+		<!-- ============ CHECKBOX / RADIO ============ -->
+		<section>
+			<h2>Checkbox e Radio <span class="badge ok">preenche</span></h2>
+			<p class="desc">Marcados automaticamente quando aplicável.</p>
+			<div class="grid">
+				<div class="checkbox-row">
+					<input id="aceite" name="aceite" type="checkbox">
+					<label for="aceite">Aceito os termos</label>
+				</div>
+				<div class="checkbox-row">
+					<input id="newsletter" name="newsletter" type="checkbox">
+					<label for="newsletter">Quero receber novidades</label>
+				</div>
+			</div>
+		</section>
+
+	</main>
+
+	<script>
+		(function () {
+			var campo = document.getElementById("senha");
+			var botao = document.getElementById("toggleSenha");
+
+			if (!campo || !botao)
+				return;
+
+			botao.addEventListener("click", function () {
+				var oculto = campo.type === "password";
+				campo.type = oculto ? "text" : "password";
+				botao.setAttribute("aria-label", oculto ? "Ocultar senha" : "Mostrar senha");
+			});
+		})();
+	</script>
+
+</body>
+</html>

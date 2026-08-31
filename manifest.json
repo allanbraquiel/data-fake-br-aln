@@ -37,6 +37,8 @@
         "generators/rg.js",
         "generators/cns.js",
         "generators/profession.js",
+        "utils/random.js",
+        "utils/profiles.js",
         "utils/addressService.js",
         "utils/fieldDetector.js",
         "content.js"

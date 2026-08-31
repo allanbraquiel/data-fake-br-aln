@@ -383,13 +383,17 @@ async function mapearCampoSelecionado(tipoCampo) {
   return { tipoCampo, identificador };
 }
 
-document.addEventListener("contextmenu", (evento) => {
-  registrarCampoContexto(evento.target);
-}, true);
+if (!window.__dataFakeInicializado) {
+  window.__dataFakeInicializado = true;
 
-document.addEventListener("focusin", (evento) => {
-  registrarCampoContexto(evento.target);
-}, true);
+  document.addEventListener("contextmenu", (evento) => {
+    registrarCampoContexto(evento.target);
+  }, true);
+
+  document.addEventListener("focusin", (evento) => {
+    registrarCampoContexto(evento.target);
+  }, true);
+}
 
 function elementoVisivel(elemento) {
   if (!elemento)
@@ -518,7 +522,7 @@ function gerarSenha() {
   const todos = `${maiusculas}${minusculas}${numeros}${especiais}`;
 
   function numeroAleatorio(maximo) {
-    if (window.crypto && window.crypto.getRandomValues) {
+    if (!temSeedAtiva() && window.crypto && window.crypto.getRandomValues) {
       const array = new Uint32Array(1);
       window.crypto.getRandomValues(array);
       return array[0] % maximo;
@@ -620,7 +624,7 @@ async function montarIdentidade() {
   };
 
   try {
-    const enderecoViaCep = await buscarEnderecoPorCEP(cep);
+    const enderecoViaCep = await buscarEnderecoPorCEP(local.cep);
     if (enderecoViaCep && !enderecoViaCep.erro)
       endereco = enderecoViaCep;
   } catch (error) {
@@ -650,56 +654,134 @@ async function montarIdentidade() {
   };
 }
 
-async function preencherFormulario() {
-  const campos = document.querySelectorAll("input, textarea, select");
-  if (!campos.length)
-    return { preenchidos: 0, ignorados: 0 };
+function obterMotivoIgnorar(campo) {
+  const tipo = (campo.type || "").toLowerCase();
 
-  const identidade = await montarIdentidade();
-  const mapeamentosHost = await carregarMapeamentosHostAtual().catch((erro) => {
-    console.warn("Falha ao carregar mapeamentos do host:", erro);
-    return {};
+  if (campo.disabled)
+    return "disabled";
+  if (campo.readOnly)
+    return "readonly";
+  if (tipo === "hidden")
+    return "hidden";
+  if (tipo === "file")
+    return "file";
+  if (tipo === "submit" || tipo === "button" || tipo === "reset")
+    return "botao";
+  return "";
+}
+
+function registrarRelatorio(relatorio, campo, tipoCampo, status, motivo) {
+  relatorio.push({
+    identificador: obterIdentificadorCampo(campo),
+    tipoCampo,
+    status,
+    motivo: motivo || ""
   });
+}
 
-  let preenchidos = 0;
-  let ignorados = 0;
+async function preencherFormulario(opcoes) {
+  const config = opcoes || {};
+  const perfil = obterPerfil(config.perfil);
+  const relatorio = [];
 
-  campos.forEach((campo) => {
-    if (deveIgnorarCampo(campo)) {
-      ignorados += 1;
+  if (config.seed !== undefined && config.seed !== null && config.seed !== "") {
+    try {
+      definirSeed(config.seed);
+    } catch (error) {
+      console.warn("Seed invalida ignorada:", error.message);
+    }
+  }
+
+  try {
+    const campos = document.querySelectorAll("input, textarea, select");
+    if (!campos.length)
+      return { preenchidos: 0, ignorados: 0, relatorio };
+
+    const identidade = await montarIdentidade();
+    const mapeamentosHost = await carregarMapeamentosHostAtual().catch((erro) => {
+      console.warn("Falha ao carregar mapeamentos do host:", erro);
+      return {};
+    });
+
+    let preenchidos = 0;
+    let ignorados = 0;
+
+    campos.forEach((campo) => {
+      const motivo = obterMotivoIgnorar(campo);
+      if (motivo) {
+        ignorados += 1;
+        registrarRelatorio(relatorio, campo, "", "ignorado", motivo);
+        return;
+      }
+
+      const tipoCampo = obterTipoCampoComMapeamento(campo, mapeamentosHost);
+
+      if (!perfilPermiteCampo(perfil, tipoCampo)) {
+        ignorados += 1;
+        registrarRelatorio(relatorio, campo, tipoCampo, "ignorado", "fora_do_perfil");
+        return;
+      }
+
+      if (preencherCampoPorTipo(campo, tipoCampo, identidade)) {
+        preenchidos += 1;
+        registrarRelatorio(relatorio, campo, tipoCampo, "preenchido", "");
+      } else {
+        ignorados += 1;
+        registrarRelatorio(relatorio, campo, tipoCampo, "ignorado", "sem_valor");
+      }
+    });
+
+    const preenchidosCustom = preencherElementosCustomizados(identidade);
+
+    return {
+      preenchidos: preenchidos + preenchidosCustom,
+      ignorados,
+      preenchidosCustom,
+      perfil: perfil.label,
+      relatorio
+    };
+  } finally {
+    limparSeed();
+  }
+}
+
+function origemMensagemValida(sender) {
+  if (!sender || !sender.id)
+    return false;
+
+  if (chrome.runtime && chrome.runtime.id && sender.id !== chrome.runtime.id)
+    return false;
+
+  return true;
+}
+
+if (window.__dataFakeInicializado) {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (!origemMensagemValida(sender)) {
+      sendResponse({ status: "erro", mensagem: "Origem da mensagem invalida." });
       return;
     }
 
-    const tipoCampo = obterTipoCampoComMapeamento(campo, mapeamentosHost);
-    if (preencherCampoPorTipo(campo, tipoCampo, identidade))
-      preenchidos += 1;
+    if (request.action === "fillForm") {
+      preencherFormulario(request.opcoes || {})
+        .then((resultado) => sendResponse({ status: "sucesso", ...resultado }))
+        .catch((error) => {
+          console.error("Erro ao preencher formulário:", error);
+          sendResponse({ status: "erro", mensagem: error.message });
+        });
+
+      return true;
+    }
+
+    if (request.action === "assignFieldType") {
+      mapearCampoSelecionado(request.fieldType)
+        .then((resultado) => sendResponse({ status: "sucesso", ...resultado }))
+        .catch((error) => {
+          console.error("Erro ao mapear campo via menu de contexto:", error);
+          sendResponse({ status: "erro", mensagem: error.message });
+        });
+
+      return true;
+    }
   });
-
-  const preenchidosCustom = preencherElementosCustomizados(identidade);
-
-  return { preenchidos: preenchidos + preenchidosCustom, ignorados, preenchidosCustom };
 }
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "fillForm") {
-    preencherFormulario()
-      .then((resultado) => sendResponse({ status: "sucesso", ...resultado }))
-      .catch((error) => {
-        console.error("Erro ao preencher formulário:", error);
-        sendResponse({ status: "erro", mensagem: error.message });
-      });
-
-    return true;
-  }
-
-  if (request.action === "assignFieldType") {
-    mapearCampoSelecionado(request.fieldType)
-      .then((resultado) => sendResponse({ status: "sucesso", ...resultado }))
-      .catch((error) => {
-        console.error("Erro ao mapear campo via menu de contexto:", error);
-        sendResponse({ status: "erro", mensagem: error.message });
-      });
-
-    return true;
-  }
-});

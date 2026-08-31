@@ -16,8 +16,24 @@
 					Detecta labels e campos em portugu&#234;s para agilizar testes de formul&#225;rio.
 				</p>
 
+				<div class="field">
+					<label for="perfil">Perfil de dados</label>
+					<select id="perfil">
+						<option value="completo">Completo</option>
+						<option value="pessoaFisica">Pessoa F&#237;sica</option>
+						<option value="pessoaJuridica">Pessoa Jur&#237;dica</option>
+						<option value="pacienteSus">Paciente SUS</option>
+					</select>
+				</div>
+
+				<div class="field">
+					<label for="seed">Seed (opcional, para reproduzir dados)</label>
+					<input id="seed" type="text" placeholder="ex.: 12345" autocomplete="off">
+				</div>
+
 				<div class="actions">
 					<button id="fill" type="button">Preencher formul&#225;rio</button>
+					<button id="export" type="button" class="secondary" disabled>Exportar relat&#243;rio</button>
 				</div>
 
 				<p id="status" class="status" data-variant="idle">
@@ -26,6 +42,10 @@
 
 				<p class="footnote">
 					Compat&#237;vel com campos nativos e alguns componentes customizados.
+				</p>
+
+				<p class="footnote">
+					<a href="#" id="linkDemo">Baixar p&#225;gina de demonstra&#231;&#227;o</a>
 				</p>
 			</section>
 		</main>

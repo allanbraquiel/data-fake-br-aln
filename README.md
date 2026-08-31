@@ -52,6 +52,10 @@ A extensão identifica os campos por atributos como `name`, `id`, `placeholder`,
 - Menu de contexto (botão direito) para mapear manualmente qual variável preencher em cada campo
 - Geração local de documentos e dados fake (sem backend)
 - Integração com ViaCEP para enriquecer dados de endereço
+- **Perfis de dados** (Pessoa Física, Pessoa Jurídica, Paciente SUS, Completo)
+- **Seed determinístico** para reproduzir a mesma identidade
+- **Relatório de cobertura** com exportação em CSV
+- **Validação de origem** das mensagens recebidas
 - **Testes automatizados** dos geradores (`npm test`)
 
 ---
@@ -87,6 +91,48 @@ const PROBABILIDADE_UF_PRIORITARIA = 0.5;   // ex.: 0.3 para priorizar menos
 
 ---
 
+## 👤 Perfis de dados
+
+O popup permite escolher um **perfil** que define quais tipos de campo serão preenchidos:
+
+| Perfil | Descrição |
+|---|---|
+| **Completo** | Preenche todos os campos detectados (padrão) |
+| **Pessoa Física** | Dados pessoais: nome, CPF, RG, CNS, telefone, profissão, endereço |
+| **Pessoa Jurídica** | Dados de empresa: CNPJ, CNPJ Alfanumérico, razão social, endereço |
+| **Paciente SUS** | Dados de saúde: nome, CNS, CPF, RG, data de nascimento, endereço |
+
+Campos cujo tipo não pertence ao perfil selecionado são ignorados e registrados no relatório como `fora_do_perfil`.
+
+Os perfis são definidos em `utils/profiles.js` e podem ser estendidos facilmente.
+
+---
+
+## 🎲 Seed determinístico
+
+Para **reproduzir a mesma identidade** em execuções diferentes, informe uma **seed** (número) no popup.
+
+- Com a mesma seed, os mesmos dados são gerados (CPF, nome, e-mail, endereço etc.).
+- Sem seed, os dados são aleatórios a cada preenchimento.
+- A seed é aplicada apenas durante o preenchimento e limpa ao final.
+
+Isso é essencial para reproduzir bugs de QA: o mesmo cenário pode ser recriado quantas vezes forem necessárias.
+
+---
+
+## 📊 Relatório de cobertura e exportação
+
+Após preencher, a extensão gera um **relatório detalhado** de cada campo:
+
+- **identificador** — como o campo foi localizado (id, name, data-testid, aria-label ou caminho)
+- **tipoCampo** — o tipo detectado (CPF, e-mail, CEP etc.)
+- **status** — `preenchido` ou `ignorado`
+- **motivo** — por que foi ignorado (`disabled`, `readonly`, `hidden`, `file`, `botao`, `fora_do_perfil`, `sem_valor`)
+
+O botão **"Exportar relatório"** no popup baixa o relatório em **CSV**, pronto para anexar a um bug report ou planilha de QA.
+
+---
+
 ## 🖱️ Mapeamento manual por campo
 
 1. Clique com o botão direito em um campo editável.
@@ -106,7 +152,7 @@ Os geradores possuem testes automatizados que validam os algoritmos oficiais (CP
 npm test
 ```
 
-Atualmente são **17 testes**, cobrindo:
+Atualmente são **26 testes**, cobrindo:
 
 - Validação de CPF, CNPJ, CNPJ Alfanumérico e CNS
 - Formato de RG, telefone, e-mail e CEP
@@ -114,6 +160,8 @@ Atualmente são **17 testes**, cobrindo:
 - Cobertura das 27 UFs
 - `gerarCEPOutraUF` nunca retorna CEP de Goiás
 - Nome, nome da mãe, empresa e profissão
+- **Seed determinístico** (mesma seed → mesma sequência; seeds diferentes → sequências diferentes)
+- **Perfis de dados** (perfil completo, pessoa física/jurídica, campos permitidos)
 
 ---
 
@@ -127,6 +175,7 @@ Atualmente são **17 testes**, cobrindo:
 ├── popup.js
 ├── content.js
 ├── background.js
+├── demo.html
 ├── package.json
 ├── generators/
 │   ├── person.js
@@ -141,9 +190,12 @@ Atualmente são **17 testes**, cobrindo:
 │   └── profession.js
 ├── utils/
 │   ├── fieldDetector.js
-│   └── addressService.js
+│   ├── addressService.js
+│   ├── random.js
+│   └── profiles.js
 └── test/
-    └── generators.test.js
+    ├── generators.test.js
+    └── random-profiles.test.js
 ```
 
 ---
@@ -172,6 +224,22 @@ Atualmente são **17 testes**, cobrindo:
 - Testes de usabilidade e fluxo de cadastro
 - QA funcional de formulários
 - Demonstrações rápidas de interfaces com dados plausíveis
+- Reprodução de bugs com **seed determinística**
+- Auditoria de cobertura de formulários via **relatório exportado**
+
+### Página de demonstração
+
+O arquivo **`demo.html`** (na raiz do projeto) é uma página de teste para validar a assertividade do preenchimento e apresentar o comportamento para outras pessoas.
+
+- Use o link **"Baixar página de demonstração"** no popup para baixar o arquivo `demo.html`, ou abra-o diretamente na raiz do projeto.
+- Abra o `demo.html` baixado no navegador (duplo clique ou arraste para a aba).
+- Clique no ícone da extensão e em **Preencher formulário**.
+- **Importante:** para que a extensão funcione em arquivos locais (`file://`), ative a opção **"Permitir acesso a URLs de arquivo"** nas configurações da extensão em `chrome://extensions`.
+- A página contém:
+  - **Campos que a extensão preenche** (verde): dados pessoais, documentos, contato, empresa, endereço, textos, checkbox/radio.
+  - **Campos que NÃO são preenchidos** (vermelho): desabilitados, somente leitura, ocultos, arquivo e botões — permanecem intactos.
+- O campo **Senha** possui um botão de olho (👁) para **visualizar/ocultar** o valor preenchido.
+- Use o **menu de contexto** (botão direito) em qualquer campo para mapear manualmente um tipo e demonstrar o preenchimento individual.
 
 > **Importante:** os dados são fictícios, mas podem passar em validações de formato. Use somente em ambientes de teste/homologação.
 
@@ -191,6 +259,7 @@ Além disso, faz requisição HTTP para a API pública do **ViaCEP** ao buscar e
 - Não há backend próprio neste projeto.
 - O armazenamento local do navegador é usado para persistir mapeamentos manuais de campos.
 - A geração de dados é 100% local; nenhum dado é enviado a servidores além da consulta de CEP ao ViaCEP.
+- As mensagens recebidas pelo script de conteúdo são **validadas por origem**: apenas mensagens da própria extensão (popup/background) são aceitas, via verificação do `sender.id`.
 
 ---
 
@@ -221,7 +290,8 @@ Sugestões de melhorias:
 - ampliar heurísticas de detecção de campos;
 - melhorar suporte a bibliotecas de componentes (React/Vue/Angular);
 - adicionar testes automatizados do detector de campos;
-- adicionar perfis de dados e geração em lote (CSV/JSON).
+- adicionar geração em lote (CSV/JSON) de múltiplas identidades;
+- adicionar suporte a iframes.
 
 ---
 
